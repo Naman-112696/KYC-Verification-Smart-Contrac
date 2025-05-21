@@ -7,60 +7,53 @@ pragma solidity ^0.8.17;
  */
 contract KYCVerification {
     address public owner;
-    
-    // Possible verification status
+
     enum VerificationStatus { Unverified, Pending, Verified, Rejected }
-    
-    // Structure to hold customer KYC information
+
     struct Customer {
         address customerAddress;
         string customerName;
-        string customerDataHash; // IPFS or other storage hash for KYC documents
+        string customerDataHash;
         VerificationStatus status;
         uint256 verificationTimestamp;
         string rejectionReason;
     }
-    
-    // Mappings to store data
+
     mapping(address => Customer) public customers;
     mapping(address => bool) public verifiers;
-    
-    // Count of customers and verifiers
+
+    address[] private customerAddresses;
+
     uint256 public customerCount;
     uint256 public verifierCount;
-    
-    // Events
+
     event CustomerRegistered(address indexed customerAddress, string customerName);
     event KYCVerified(address indexed customerAddress, address indexed verifier);
     event KYCRejected(address indexed customerAddress, address indexed verifier, string reason);
     event VerifierAdded(address indexed verifier);
     event VerifierRemoved(address indexed verifier);
-    
-    // Modifiers
+    event KYCResubmitted(address indexed customerAddress, string newHash);
+    event CustomerNameChanged(address indexed customerAddress, string newName);
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
         _;
     }
-    
+
     modifier onlyVerifier() {
         require(verifiers[msg.sender] || msg.sender == owner, "Only verifiers can call this function");
         _;
     }
-    
+
     constructor() {
         owner = msg.sender;
         verifiers[msg.sender] = true;
         verifierCount = 1;
     }
-    
-    /**
-     * @dev Register a customer for KYC verification
-     * @param _customerName Name of the customer
-     * @param _customerDataHash IPFS or other storage hash containing KYC documents
-     */
+
     function registerCustomer(string memory _customerName, string memory _customerDataHash) public {
         require(customers[msg.sender].customerAddress == address(0), "Customer already registered");
-        
+
         customers[msg.sender] = Customer({
             customerAddress: msg.sender,
             customerName: _customerName,
@@ -69,74 +62,97 @@ contract KYCVerification {
             verificationTimestamp: 0,
             rejectionReason: ""
         });
-        
+
+        customerAddresses.push(msg.sender);
         customerCount++;
         emit CustomerRegistered(msg.sender, _customerName);
     }
-    
-    /**
-     * @dev Verify a customer's KYC
-     * @param _customerAddress Address of the customer to verify
-     */
+
     function verifyCustomer(address _customerAddress) public onlyVerifier {
         require(customers[_customerAddress].customerAddress != address(0), "Customer not registered");
-        require(customers[_customerAddress].status == VerificationStatus.Pending, "Customer not in pending state");
-        
+        require(customers[_customerAddress].status == VerificationStatus.Pending, "Not in pending state");
+
         customers[_customerAddress].status = VerificationStatus.Verified;
         customers[_customerAddress].verificationTimestamp = block.timestamp;
-        
+
         emit KYCVerified(_customerAddress, msg.sender);
     }
-    
-    /**
-     * @dev Reject a customer's KYC
-     * @param _customerAddress Address of the customer to reject
-     * @param _reason Reason for rejection
-     */
+
     function rejectCustomer(address _customerAddress, string memory _reason) public onlyVerifier {
         require(customers[_customerAddress].customerAddress != address(0), "Customer not registered");
-        require(customers[_customerAddress].status == VerificationStatus.Pending, "Customer not in pending state");
-        
+        require(customers[_customerAddress].status == VerificationStatus.Pending, "Not in pending state");
+
         customers[_customerAddress].status = VerificationStatus.Rejected;
         customers[_customerAddress].rejectionReason = _reason;
-        
+
         emit KYCRejected(_customerAddress, msg.sender, _reason);
     }
-    
-    /**
-     * @dev Add a new verifier
-     * @param _verifierAddress Address of the new verifier
-     */
+
     function addVerifier(address _verifierAddress) public onlyOwner {
-        require(!verifiers[_verifierAddress], "Address is already a verifier");
-        
+        require(!verifiers[_verifierAddress], "Already a verifier");
+
         verifiers[_verifierAddress] = true;
         verifierCount++;
-        
+
         emit VerifierAdded(_verifierAddress);
     }
-    
-    /**
-     * @dev Remove a verifier
-     * @param _verifierAddress Address of the verifier to remove
-     */
+
     function removeVerifier(address _verifierAddress) public onlyOwner {
-        require(verifiers[_verifierAddress], "Address is not a verifier");
-        require(_verifierAddress != owner, "Cannot remove owner as verifier");
-        
+        require(verifiers[_verifierAddress], "Not a verifier");
+        require(_verifierAddress != owner, "Cannot remove owner");
+
         verifiers[_verifierAddress] = false;
         verifierCount--;
-        
+
         emit VerifierRemoved(_verifierAddress);
     }
-    
-    /**
-     * @dev Get customer verification status
-     * @param _customerAddress Address of the customer
-     * @return Status of the customer verification process
-     */
+
     function getCustomerStatus(address _customerAddress) public view returns (VerificationStatus) {
         require(customers[_customerAddress].customerAddress != address(0), "Customer not registered");
         return customers[_customerAddress].status;
+    }
+
+    // 🆕 Get full customer details
+    function getCustomerDetails(address _customerAddress) public view returns (
+        string memory name,
+        string memory dataHash,
+        VerificationStatus status,
+        uint256 timestamp,
+        string memory reason
+    ) {
+        Customer memory c = customers[_customerAddress];
+        require(c.customerAddress != address(0), "Customer not registered");
+        return (c.customerName, c.customerDataHash, c.status, c.verificationTimestamp, c.rejectionReason);
+    }
+
+    // 🆕 Allow resubmission of KYC data if rejected
+    function resubmitKYC(string memory _newHash) public {
+        require(customers[msg.sender].customerAddress != address(0), "Customer not registered");
+        require(customers[msg.sender].status == VerificationStatus.Rejected, "KYC not rejected");
+
+        customers[msg.sender].customerDataHash = _newHash;
+        customers[msg.sender].status = VerificationStatus.Pending;
+        customers[msg.sender].rejectionReason = "";
+
+        emit KYCResubmitted(msg.sender, _newHash);
+    }
+
+    // 🆕 Change customer name (before approval)
+    function changeCustomerName(string memory _newName) public {
+        require(customers[msg.sender].customerAddress != address(0), "Customer not registered");
+        require(customers[msg.sender].status == VerificationStatus.Pending, "Can only change during pending");
+
+        customers[msg.sender].customerName = _newName;
+        emit CustomerNameChanged(msg.sender, _newName);
+    }
+
+    // 🆕 Get all customer addresses
+    function getAllCustomerAddresses() public view returns (address[] memory) {
+        return customerAddresses;
+    }
+
+    // 🆕 Check if address is a verifier
+    function isVerifier(address _addr) public view returns (bool) {
+        return verifiers[_addr];
     }
 }
