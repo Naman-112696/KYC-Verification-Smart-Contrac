@@ -162,5 +162,10 @@ contract KYCVerification {
     // Check if an address is a verifier
     function isVerifier(address _addr) public view returns (bool) {
         return verifiers[_addr];
+
+ // Allow customer to change name (if still pending)
+    function changeCustomerName(string memory _newName) public {
+        require(customers[msg.sender].customerAddress != address(0), "Customer not registered");
+        require(customers[msg.sender].status == VerificationStatus.Pending, "Can only change during pending");
     }
 }
