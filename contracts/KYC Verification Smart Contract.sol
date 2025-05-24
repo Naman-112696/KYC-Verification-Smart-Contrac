@@ -52,7 +52,7 @@ contract KYCVerification {
     }
 
     // Register a new customer for KYC
-    function registerCustomer(string memory _customerName, string memory _customerDataHash) public {
+    function registerCustomer(string memory _customerName,string memory _customerDataHash) public {
         require(customers[msg.sender].customerAddress == address(0), "Customer already registered");
 
         customers[msg.sender] = Customer({
