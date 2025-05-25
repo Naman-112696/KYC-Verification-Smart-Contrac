@@ -13,7 +13,7 @@ contract KYCVerification {
     struct Customer {
         address customerAddress;
         string customerName;
-        string customerDataHash;
+        string customerDataHash
         VerificationStatus status;
         uint256 verificationTimestamp;
         string rejectionReason;
