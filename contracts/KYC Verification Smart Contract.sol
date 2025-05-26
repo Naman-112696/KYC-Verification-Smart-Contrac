@@ -63,6 +63,13 @@ contract KYCVerification {
             verificationTimestamp: 0,
             rejectionReason: ""
         });
+ event CustomerRegistered(address indexed customerAddress, string customerName);
+    event KYCVerified(address indexed customerAddress, address indexed verifier);
+    event KYCRejected(address indexed customerAddress, address indexed verifier, string reason);
+    event VerifierAdded(address indexed verifier);
+    event VerifierRemoved(address indexed verifier);
+    event KYCResubmitted(address indexed customerAddress, string newHash);
+    event CustomerNameChanged(address indexed customerAddress, string newName);
 
         customerAddresses.push(msg.sender);
         customerCount++;
