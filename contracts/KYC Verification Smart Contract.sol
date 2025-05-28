@@ -6,8 +6,7 @@ pragma solidity ^0.8.17;
  * @dev Smart contract for managing KYC verification processes
  */
 contract KYCVerification {
-    address public owner;
-
+    address public owner
     enum VerificationStatus { Unverified, Pending, Verified, Rejected }
 
     struct Customer {
