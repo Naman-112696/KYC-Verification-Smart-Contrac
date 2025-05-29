@@ -10,7 +10,7 @@ contract KYCVerification {
     enum VerificationStatus { Unverified, Pending, Verified, Rejected }
 
     struct Customer {
-        address customerAddress;
+        address customerAddress
         string customerNam
         string customerDataHash;
         VerificationStatus status;
