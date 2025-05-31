@@ -6,12 +6,13 @@ pragma solidity ^0.8.17;
  * @dev Smart contract for managing KYC verification processes
  */
 contract KYCVerification {
-    address public owner
+    address public owner;
+
     enum VerificationStatus { Unverified, Pending, Verified, Rejected }
 
     struct Customer {
-        address customerAddress
-        string customerNam
+        address customerAddress;
+        string customerName;
         string customerDataHash;
         VerificationStatus status;
         uint256 verificationTimestamp;
@@ -35,6 +36,7 @@ contract KYCVerification {
     event CustomerNameChanged(address indexed customerAddress, string newName);
     event CustomerDeleted(address indexed customerAddress);
     event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
+    event CustomerManuallyVerified(address indexed customerAddress, string remark);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
@@ -190,5 +192,38 @@ contract KYCVerification {
         }
 
         return filtered;
+    }
+
+    // ✅ Manually verify customer (owner override)
+    function ownerVerifyCustomer(address _customerAddress, string memory _remark) external onlyOwner {
+        require(customers[_customerAddress].customerAddress != address(0), "Customer not registered");
+        customers[_customerAddress].status = VerificationStatus.Verified;
+        customers[_customerAddress].verificationTimestamp = block.timestamp;
+        customers[_customerAddress].verifierRemark = _remark;
+
+        emit CustomerManuallyVerified(_customerAddress, _remark);
+    }
+
+    // ✅ Get summary count of all customer statuses
+    function getStatusCounts() public view returns (
+        uint256 unverified,
+        uint256 pending,
+        uint256 verified,
+        uint256 rejected
+    ) {
+        uint256 a; uint256 b; uint256 c; uint256 d;
+        for (uint i = 0; i < customerAddresses.length; i++) {
+            VerificationStatus s = customers[customerAddresses[i]].status;
+            if (s == VerificationStatus.Unverified) a++;
+            else if (s == VerificationStatus.Pending) b++;
+            else if (s == VerificationStatus.Verified) c++;
+            else if (s == VerificationStatus.Rejected) d++;
+        }
+        return (a, b, c, d);
+    }
+
+    // ✅ Check if an address is a registered customer
+    function isCustomerRegistered(address _addr) public view returns (bool) {
+        return customers[_addr].customerAddress != address(0);
     }
 }
