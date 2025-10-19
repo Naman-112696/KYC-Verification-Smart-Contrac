@@ -194,7 +194,7 @@ contract KYCVerification {
         return filtered;
     }
 
-    // ✅ Manually verify customer (owner override)
+    // ? Manually verify customer (owner override)
     function ownerVerifyCustomer(address _customerAddress, string memory _remark) external onlyOwner {
         require(customers[_customerAddress].customerAddress != address(0), "Customer not registered");
         customers[_customerAddress].status = VerificationStatus.Verified;
@@ -204,7 +204,7 @@ contract KYCVerification {
         emit CustomerManuallyVerified(_customerAddress, _remark);
     }
 
-    // ✅ Get summary count of all customer statuses
+    // ? Get summary count of all customer statuses
     function getStatusCounts() public view returns (
         uint256 unverified,
         uint256 pending,
@@ -222,8 +222,11 @@ contract KYCVerification {
         return (a, b, c, d);
     }
 
-    // ✅ Check if an address is a registered customer
+    // ? Check if an address is a registered customer
     function isCustomerRegistered(address _addr) public view returns (bool) {
         return customers[_addr].customerAddress != address(0);
     }
 }
+// START
+Updated on 2025-10-19
+// END
