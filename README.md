@@ -8,8 +8,7 @@ The KYC Verification Smart Contract provides a decentralized approach to custome
 
 The smart contract manages the entire KYC lifecycle - from customer registration, through verification by authorized entities, to the maintenance of verification status. All data is securely stored with only cryptographic hashes of documents present on-chain, while actual documents remain in secure off-chain storage systems (like IPFS).
 
-## Project Vision
-
+## Project Visionn
 Our vision is to transform the KYC landscape by creating a trustless verification system that reduces costs, speeds up onboarding, and enhances security. We envision a future where customers undergo KYC verification once and can use their verified status across multiple services, with full control over their personal data. 
 
 By implementing this solution on the Core blockchain, we leverage the platform's security, speed, and cost-effectiveness to create a system that benefits both institutions and customers.
