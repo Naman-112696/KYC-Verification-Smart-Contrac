@@ -1,17 +1,4 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-import "@openzeppelin/contracts/access/AccessControl.sol";
-
-/**
- * @title KYCVerification
- * @dev Role-based KYC verification smart contract
- * Admin (DEFAULT_ADMIN_ROLE) can add/remove KYC data for addresses.
- */
-contract KYCVerification is AccessControl {
-    bytes32 public constant KYC_ADMIN_ROLE = keccak256("KYC_ADMIN_ROLE");
-
-    // Mapping to track KYC status for addresses
+Mapping to track KYC status for addresses
     mapping(address => bool) private _kycVerified;
 
     // Events
@@ -75,3 +62,6 @@ contract KYCVerification is AccessControl {
         revokeRole(KYC_ADMIN_ROLE, account);
     }
 }
+// 
+End
+// 
